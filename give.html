@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的世界1.21.x版本命令生成器</title>
+    <link rel="icon" href="https://static.wikia.nocookie.net/minecraft_zh_gamepedia/images/7/76/Impulse_Command_Block.gif">
+
+    <!-- CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style-all.css">
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        minecraft: {
+                            green: '#4CAF50',
+                            gray: '#9E9E9E',
+                            dark: '#212121',
+                            light: '#F5F5F5'
+                        }
+                    },
+                    fontFamily: {
+                        minecraft: ['Minecraft', 'sans-serif', 'system-ui']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .command-preview {
+                @apply bg-minecraft-dark text-green-400 p-4 rounded-lg font-mono text-sm md:text-base overflow-x-auto transition-all duration-300;
+            }
+            .option-card {
+                @apply bg-white rounded-xl shadow-md p-5 mb-6 transition-all duration-300 hover:shadow-lg;
+            }
+            .advanced-section {
+                @apply bg-gray-50 rounded-lg border border-gray-200 mb-6 overflow-hidden transition-all duration-300;
+            }
+            .advanced-section-header {
+                @apply p-4 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer;
+            }
+            .advanced-section-content {
+                @apply p-4 transition-all duration-300;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:outline-none;
+            }
+            .btn-secondary {
+                @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all duration-200 focus:ring-2 focus:ring-gray-400 focus:outline-none;
+            }
+            .input-field {
+                @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+            }
+            .switch {
+                @apply relative inline-block w-10 h-5;
+            }
+            .switch input {
+                @apply opacity-0 w-0 h-0;
+            }
+            .slider {
+                @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition-all duration-200;
+            }
+            .slider:before {
+                @apply absolute content-[''] h-4 w-4 left-0.5 bottom-0.5 bg-white rounded-full transition-all duration-200;
+            }
+            input:checked + .slider {
+                @apply bg-primary;
+            }
+            input:checked + .slider:before {
+                @apply transform translate-x-5;
+            }
+            .text-part-card {
+                @apply bg-white p-3 rounded-lg border border-gray-200 mb-3;
+            }
+            .lore-line-card {
+                @apply bg-white p-4 rounded-lg border-2 border-gray-200 mb-4;
+            }
+            .enchantment-card {
+                @apply bg-white p-4 rounded-lg border border-gray-200 mb-4 flex flex-col md:flex-row gap-3 items-start;
+            }
+            .attribute-card {
+                @apply bg-white p-4 rounded-lg border border-gray-200 mb-4;
+            }
+            .color-btn.active {
+                @apply ring-2 ring-primary scale-110;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 页面标题 -->
+        <header class="text-center mb-10">
+            <h1 class="text-[clamp(1.8rem,5vw,3rem)] font-bold text-gray-800 mb-2">
+                我的世界1.21.x版本命令生成器
+            </h1>
+            <p class="text-gray-600 text-lg">功能持续开发当中，当前版本v2.1</p>
+        </header>
+        
+        <!-- 基础设置区 -->
+        <div class="option-card">
+            <h2 class="text-xl font-semibold mb-5 text-gray-800 flex items-center">
+                <i class="fa fa-cog text-primary mr-2"></i>基础设置
+            </h2>
+            <!-- 1. 命令选择 -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-medium mb-2">选择命令</label>
+                <div class="flex flex-wrap gap-3">
+                    <button class="command-btn bg-primary text-white px-4 py-2 rounded-lg" data-command="/give">/give</button>
+                    <button class="command-btn bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed" data-command="/summon">/summon</button>
+                    <button class="command-btn bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed" data-command="/tp">/tp</button>
+                    <button class="command-btn bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed" data-command="/effect">/effect</button>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">
+                    <i class="fa fa-info-circle mr-1"></i>
+                    其他指令和功能正在开发中
+                </p>
+            </div>
+            <!-- 2. 目标选择 -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-medium mb-2">选择目标</label>
+                <div class="flex flex-wrap gap-3 mb-3">
+                    <button class="target-btn bg-primary/10 text-primary px-3 py-1 rounded border border-primary" data-target="@p">@p (最近的玩家)</button>
+                    <button class="target-btn bg-gray-100 text-gray-700 px-3 py-1 rounded border border-gray-300" data-target="@r">@r (随机玩家)</button>
+                    <button class="target-btn bg-gray-100 text-gray-700 px-3 py-1 rounded border border-gray-300" data-target="@a">@a (所有玩家)</button>
+                    <button class="target-btn bg-gray-100 text-gray-700 px-3 py-1 rounded border border-gray-300" data-target="@s">@s (自己)</button>
+                </div>
+                <div class="flex">
+                    <input type="text" id="customTarget" class="input-field" placeholder="或输入自定义目标...">
+                </div>
+            </div>
+            <!-- 3. 物品ID -->
+            <div class="mb-6">
+                <label for="itemId" class="block text-gray-700 font-medium mb-2">物品ID</label>
+                <div class="flex">
+                    <input type="text" id="itemId" class="input-field" placeholder="例如“木棍”为：minecraft:stick/stick（推荐使用全称更标准）">
+                </div>
+                <p class="text-sm text-gray-500 mt-1">
+                    <i class="fa fa-info-circle mr-1"></i>
+                    物品ID可在 <a href="https://mcid.lingningyu.cn/" target="_blank" class="text-primary hover:underline">MCID </a> 查询
+                </p>
+            </div>
+            <!-- 4. 物品数量 -->
+            <div class="mb-4">
+                <label for="itemCount" class="block text-gray-700 font-medium mb-2">物品数量</label>
+                <div class="flex">
+                    <input type="number" id="itemCount" class="input-field" min="1" max="64" value="1">
+                </div>
+            </div>
+        </div>
+        
+        <!-- 高级选项区 - 每个组件单独开关 -->
+        <div class="option-card">
+            <h2 class="text-xl font-semibold mb-5 text-gray-800 flex items-center">
+                <i class="fa fa-sliders text-primary mr-2"></i>高级选项
+            </h2>
+
+            <!-- 1. 自定义物品名称 -->
+            <div class="advanced-section">
+                <div class="advanced-section-header" data-section="nameSection">
+                    <h3 class="text-lg font-medium text-gray-800 flex items-center">
+                        <i class="fa fa-font text-primary mr-2"></i>自定义物品名称
+                    </h3>
+                    <label class="switch">
+                        <input type="checkbox" id="nameToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div id="nameSection" class="advanced-section-content opacity-50 pointer-events-none">
+                    <div id="nameParts">
+                        <!-- 文本片段1 -->
+                        <div class="name-part text-part-card">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-700 text-sm font-medium">文本片段 #1</span>
+                                <button class="remove-part btn-secondary px-2 py-1 text-xs hidden">
+                                    <i class="fa fa-times mr-1"></i>删除
+                                </button>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <input type="text" class="input-field name-text text-sm" placeholder="输入文本...">
+                            </div>
+                            
+                            <!-- 文本样式设置 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-medium mb-1">文本颜色</label>
+                                    <div class="flex flex-wrap gap-1.5 mb-2">
+                                        <button class="color-btn w-6 h-6 rounded-full bg-black border-2 border-transparent" data-color="black"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-yellow-500 border-2 border-transparent" data-color="gold"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-gray-500 border-2 border-transparent" data-color="gray"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent" data-color="blue"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-green-500 border-2 border-transparent" data-color="green"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-cyan-500 border-2 border-transparent" data-color="aqua"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-red-500 border-2 border-transparent" data-color="red"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-yellow-400 border-2 border-transparent" data-color="yellow"></button>
+                                        <button class="color-btn w-6 h-6 rounded-full bg-white border-2 border-gray-300" data-color="white"></button>
+                                    </div>
+                                    <div class="flex">
+                                        <input type="text" class="input-field custom-color text-sm" placeholder="HEX代码，例如: #FF5555">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-medium mb-1">文本样式</label>
+                                    <div class="space-y-1">
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-gray-700 text-sm">下划线</span>
+                                            <label class="switch">
+                                                <input type="checkbox" class="style-checkbox" data-style="underlined">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </label>
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-gray-700 text-sm">删除线</span>
+                                            <label class="switch">
+                                                <input type="checkbox" class="style-checkbox" data-style="strikethrough">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </label>
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-gray-700 text-sm">乱码</span>
+                                            <label class="switch">
+                                                <input type="checkbox" class="style-checkbox" data-style="obfuscated">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </label>
+                                        <label class="flex items-center justify-between">
+                                            <span class="text-gray-700 text-sm">取消斜体</span>
+                                            <label class="switch">
+                                                <input type="checkbox" class="style-checkbox" data-style="italic">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="addNamePart" class="btn-secondary mt-2 text-sm">
+                        <i class="fa fa-plus mr-1"></i>添加文本片段
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. 自定义物品描述 -->
+            <div class="advanced-section">
+                <div class="advanced-section-header" data-section="loreSection">
+                    <h3 class="text-lg font-medium text-gray-800 flex items-center">
+                        <i class="fa fa-align-left text-primary mr-2"></i>自定义物品描述
+                    </h3>
+                    <label class="switch">
+                        <input type="checkbox" id="loreToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div id="loreSection" class="advanced-section-content opacity-50 pointer-events-none">
+                    <div id="loreLines">
+                        <!-- 描述行1 -->
+                        <div class="lore-line lore-line-card">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-gray-700 font-medium">描述行 #1</span>
+                                <button class="remove-lore-line btn-secondary px-3 py-1 text-sm hidden">
+                                    <i class="fa fa-times mr-1"></i>删除行
+                                </button>
+                            </div>
+                            
+                            <div class="lore-parts">
+                                <!-- 行内文本片段1 -->
+                                <div class="lore-part text-part-card">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-gray-700 text-sm font-medium">文本片段 #1</span>
+                                        <button class="remove-lore-part btn-secondary px-2 py-1 text-xs hidden">
+                                            <i class="fa fa-times mr-1"></i>删除
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <input type="text" class="input-field lore-text text-sm" placeholder="输入文本...">
+                                    </div>
+                                    
+                                    <!-- 文本样式设置 -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-1">文本颜色</label>
+                                            <div class="flex flex-wrap gap-1.5 mb-2">
+                                                <button class="color-btn w-6 h-6 rounded-full bg-black border-2 border-transparent" data-color="black"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-yellow-500 border-2 border-transparent" data-color="gold"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-gray-500 border-2 border-transparent" data-color="gray"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent" data-color="blue"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-green-500 border-2 border-transparent" data-color="green"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-cyan-500 border-2 border-transparent" data-color="aqua"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-red-500 border-2 border-transparent" data-color="red"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-yellow-400 border-2 border-transparent" data-color="yellow"></button>
+                                                <button class="color-btn w-6 h-6 rounded-full bg-white border-2 border-gray-300" data-color="white"></button>
+                                            </div>
+                                            <div class="flex">
+                                                <input type="text" class="input-field custom-color text-sm" placeholder="HEX代码，例如: #FF5555">
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-medium mb-1">文本样式</label>
+                                            <div class="space-y-1">
+                                                <label class="flex items-center justify-between">
+                                                    <span class="text-gray-700 text-sm">下划线</span>
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="style-checkbox" data-style="underlined">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label class="flex items-center justify-between">
+                                                    <span class="text-gray-700 text-sm">删除线</span>
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="style-checkbox" data-style="strikethrough">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label class="flex items-center justify-between">
+                                                    <span class="text-gray-700 text-sm">乱码</span>
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="style-checkbox" data-style="obfuscated">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </label>
+                                                <label class="flex items-center justify-between">
+                                                    <span class="text-gray-700 text-sm">取消斜体</span>
+                                                    <label class="switch">
+                                                        <input type="checkbox" class="style-checkbox" data-style="italic">
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between mt-3">
+                                <button class="add-lore-part btn-secondary text-sm">
+                                    <i class="fa fa-plus mr-1"></i>添加文本片段
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="addLoreLine" class="btn-secondary mt-3">
+                        <i class="fa fa-plus mr-1"></i>添加描述行
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. 自定义附魔 -->
+            <div class="advanced-section">
+                <div class="advanced-section-header" data-section="enchantmentSection">
+                    <h3 class="text-lg font-medium text-gray-800 flex items-center">
+                        <i class="fa fa-magic text-primary mr-2"></i>自定义附魔
+                    </h3>
+                    <label class="switch">
+                        <input type="checkbox" id="enchantmentToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div id="enchantmentSection" class="advanced-section-content opacity-50 pointer-events-none">
+                    <div id="enchantmentParts">
+                        <!-- 初始为空，通过添加按钮添加附魔 -->
+                    </div>
+                    
+                    <button id="addEnchantmentPart" class="btn-secondary mt-3">
+                        <i class="fa fa-plus mr-1"></i>添加附魔
+                    </button>
+
+                    <p class="text-sm text-gray-500 mt-3">
+                        <i class="fa fa-info-circle mr-1"></i>
+                        为了方便添加非原版的附魔和考虑到代码复杂度，因此这里没有采用选择附魔的形式，希望能够理解！
+                    </p>
+                    <!-- 替换原附魔部分的说明文字区域 -->
+                    <div class="mt-3">
+                        <button id="showEnchantmentRef" class="text-primary text-sm hover:underline flex items-center">
+                            <i class="fa fa-book mr-1"></i>点击展开附魔ID列表
+                        </button>
+                        
+                        <div id="enchantmentRef" class="hidden mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-700 max-h-60 overflow-y-auto">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div><strong>横扫之刃：</strong>minecraft:sweeping_edge</div>
+                                <div><strong>水下速掘：</strong>minecraft:aqua_affinity</div>
+                                <div><strong>深海探索者：</strong>minecraft:depth_strider</div>
+                                <div><strong>水下呼吸：</strong>minecraft:respiration</div>
+                                <div><strong>饵钓：</strong>minecraft:lure</div>
+                                <div><strong>火焰附加：</strong>minecraft:fire_aspect</div>
+                                <div><strong>抢夺：</strong>minecraft:looting</div>
+                                <div><strong>引雷：</strong>minecraft:channeling</div>
+                                <div><strong>海之眷顾：</strong>minecraft:luck_of_the_sea</div>
+                                <div><strong>亡灵杀手：</strong>minecraft:smite</div>
+                                <div><strong>摔落缓冲：</strong>minecraft:feather_falling</div>
+                                <div><strong>效率：</strong>minecraft:efficiency</div>
+                                <div><strong>穿刺：</strong>minecraft:impaling</div>
+                                <div><strong>荆棘：</strong>minecraft:thorns</div>
+                                <div><strong>火矢：</strong>minecraft:flame</div>
+                                <div><strong>节肢杀手：</strong>minecraft:bane_of_arthropods</div>
+                                <div><strong>时运：</strong>minecraft:fortune</div>
+                                <div><strong>冲击：</strong>minecraft:punch</div>
+                                <div><strong>快速装填：</strong>minecraft:quick_charge</div>
+                                <div><strong>多重射击：</strong>minecraft:multishot</div>
+                                <div><strong>穿透：</strong>minecraft:piercing</div>
+                                <div><strong>激流：</strong>minecraft:riptide</div>
+                                <div><strong>无限：</strong>minecraft:infinity</div>
+                                <div><strong>忠诚：</strong>minecraft:loyalty</div>
+                                <div><strong>绑定诅咒：</strong>minecraft:binding_curse</div>
+                                <div><strong>消失诅咒：</strong>minecraft:vanishing_curse</div>
+                                <div><strong>保护：</strong>minecraft:protection</div>
+                                <div><strong>爆炸保护：</strong>minecraft:blast_protection</div>
+                                <div><strong>火焰保护：</strong>minecraft:fire_protection</div>
+                                <div><strong>弹射物保护：</strong>minecraft:projectile_protection</div>
+                                <div><strong>力量：</strong>minecraft:power</div>
+                                <div><strong>经验修补：</strong>minecraft:mending</div>
+                                <div><strong>击退：</strong>minecraft:knockback</div>
+                                <div><strong>冰霜行者：</strong>minecraft:frost_walker</div>
+                                <div><strong>耐久：</strong>minecraft:unbreaking</div>
+                                <div><strong>精准采集：</strong>minecraft:silk_touch</div>
+                                <div><strong>锋利：</strong>minecraft:sharpness</div>
+                                <div><strong>灵魂疾行：</strong>minecraft:soul_speed</div>
+                                <div><strong>迅捷潜行：</strong>minecraft:swift_sneak</div>
+                                <div><strong>破甲：</strong>minecraft:breach</div>
+                                <div><strong>致密：</strong>minecraft:density</div>
+                                <div><strong>风爆：</strong>minecraft:wind_burst</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 属性修饰符 -->
+            <div class="advanced-section">
+                <div class="advanced-section-header" data-section="attributeSection">
+                    <h3 class="text-lg font-medium text-gray-800 flex items-center">
+                        <i class="fa fa-sliders text-primary mr-2"></i>属性修饰符
+                    </h3>
+                    <label class="switch">
+                        <input type="checkbox" id="attributeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div id="attributeSection" class="advanced-section-content opacity-50 pointer-events-none">
+                    <div id="attributeModifiers">
+                        <!-- 初始为空，通过添加按钮添加属性修饰符 -->
+                    </div>
+                    
+                    <button id="addAttributeModifier" class="btn-secondary mt-3">
+                        <i class="fa fa-plus mr-1"></i>添加属性修饰符
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 命令预览区 -->
+        <div class="option-card">
+            <h2 class="text-xl font-semibold mb-3 text-gray-800">命令预览</h2>
+            <div id="commandPreview" class="command-preview">/give @p</div>
+            <div class="mt-4 flex flex-wrap gap-3">
+                <button id="copyButton" class="btn-primary flex items-center">
+                    <i class="fa fa-copy mr-2"></i>复制命令
+                </button>
+                <button id="resetButton" class="btn-secondary flex items-center">
+                    <i class="fa fa-refresh mr-2"></i>重置
+                </button>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-10 text-center text-gray-500 text-sm">
+            <p>欢迎加群【736787439】了解更多，项目Github地址：<a href="https://github.com/mapletav/mapletav.github.io">【点我跳转】</a>，希望有能力的可以点个star，感谢！</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="./js/script.js"></script>
+</body>
+</html>
